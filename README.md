@@ -1,14 +1,13 @@
 # mlx-marimo-llm
 Apple MLX LLMs - mlx-lm + marimo 
 
-## edit: very broken, work in progress, needs to be simpler, threading not needed, just sequential llm calls to avoid memory blowups
+## edit: should be working now serially, running llama 8b-instruct 8bit (mlx) locally
 
 - Entire concept and code and functions / SERP functions heavily copied from Matt Shumer @ https://github.com/mshumer/ai-researcher/blob/main/Claude_Researcher.ipynb
 - My sole contribution on top of Matt's awesome notebook is putting it in Marimo and refactoring it to run on mlx-lm, trying to avoid parallel generations that cause crashes. Modify as you see fit!
 
 ## quick usage info
 - sunday kid activities starting so here's a quick usage guide:
-- wait for me to simplify the code to not inevitably crash itself and the os
 - pip install mlx-lm (macos only)
 - pip install marimo
 - change your model directory (using llama3 here but you could use anything)
