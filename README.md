@@ -8,6 +8,7 @@ Apple MLX LLMs - mlx-lm + marimo
 
 ## quick usage info
 - sunday kid activities starting so here's a quick usage guide:
+- wait for me to simplify the code to not inevitably crash itself and the os
 - pip install mlx-lm (macos only)
 - pip install marimo
 - change your model directory (using llama3 here but you could use anything)
