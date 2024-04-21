@@ -12,7 +12,8 @@ app = marimo.App()
 @app.cell
 def __():
     import marimo as mo
-    return mo,
+
+    return (mo,)
 
 
 @app.cell
@@ -29,26 +30,17 @@ def __(mo):
 
 @app.cell
 def __():
-    import asyncio
-    import queue
-    import threading
     import requests
     import json
-    import ast
     import re
     from mlx_lm import load, generate
     import mlx.core as mx
 
-    DEFAULT_MAX_TOKENS = 100
     DEFAULT_TEMP = 0.6
     DEFAULT_TOP_P = 1.0
-    DEFAULT_SEED = 0
-
     SERP_API_KEY = ""
 
-    # model = mlx-community/Meta-Llama-3-8B-Instruct-4bit # modify to wherever (or whatever) your model may be
-    model = "/models/Meta-Llama-3-8B-Instruct-8bit-mlx"
-
+    model = "/Storage/Meta-Llama-3-8B-Instruct-8bit-mlx"
     max_tokens = 4096
     mx.random.seed(0)
     tokenizer_config = {"trust_remote_code": False}
@@ -74,7 +66,6 @@ def __():
         formatted_prompt = tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
-
         response = generate(
             model,
             tokenizer,
@@ -84,39 +75,13 @@ def __():
             True,
             top_p=DEFAULT_TOP_P,
         )
-
         response = re.sub(r'\\(["\n])', r"\1", response)
-
         return response
 
-        return (
-            DEFAULT_MAX_TOKENS,
-            DEFAULT_SEED,
-            DEFAULT_TEMP,
-            DEFAULT_TOP_P,
-            SERP_API_KEY,
-            ast,
-            generate,
-            generate_text,
-            json,
-            load,
-            max_tokens,
-            model,
-            mx,
-            re,
-            remove_first_line,
-            requests,
-            tokenizer,
-            tokenizer_config,
-        )
     return (
-        DEFAULT_MAX_TOKENS,
-        DEFAULT_SEED,
         DEFAULT_TEMP,
         DEFAULT_TOP_P,
         SERP_API_KEY,
-        ast,
-        asyncio,
         generate,
         generate_text,
         json,
@@ -124,11 +89,9 @@ def __():
         max_tokens,
         model,
         mx,
-        queue,
         re,
         remove_first_line,
         requests,
-        threading,
         tokenizer,
         tokenizer_config,
     )
@@ -141,26 +104,24 @@ def __(mo):
         label="Enter research topic",
         value="best practices for building a marimo app using mlx-lm and llama3",
     )
-    return research_topic,
+    return (research_topic,)
 
 
 @app.cell
 async def __(
     SERP_API_KEY,
-    ast,
-    asyncio,
+    e,
     generate_text,
+    json,
     mo,
-    queue,
     requests,
     research_topic,
-    threading,
 ):
     def search_web(search_term):
         url = f"https://serpapi.com/search.json?q={search_term}&api_key={SERP_API_KEY}"
         response = requests.get(url)
         data = response.json()
-        print(data)
+        print(json.dumps(data, indent=2))  # Pretty print the JSON data
         return data
 
     async def generate_subtopic_report(subtopic):
@@ -172,9 +133,10 @@ async def __(
             title=f"Generating initial search queries for subtopic: {subtopic}..."
         ):
             initial_queries_prompt = f"Generate 3 search queries to gather information on the subtopic '{subtopic}'. Return your queries in a Python-parseable list. Return nothing but the list. Do so in one line. Start your response with [\""
-            initial_queries = ast.literal_eval(
-                "[" + await enqueue_generate_text(initial_queries_prompt) + "]"
+            initial_queries = json.loads(
+                generate_text_with_retry(initial_queries_prompt)
             )
+
         print(initial_queries)
         all_queries.extend(initial_queries)
 
@@ -192,9 +154,10 @@ async def __(
                 title=f"Generating additional search queries for subtopic: {subtopic}..."
             ):
                 additional_queries_prompt = f"Here are the search results so far for the subtopic '{subtopic}':\n\n{str(search_data)}\n\n---\n\nHere are all the search queries you have used so far for this subtopic:\n\n{str(all_queries)}\n\n---\n\nBased on the search results and previous queries, generate 3 new and unique search queries to expand the knowledge on the subtopic '{subtopic}'. Return your queries in a Python-parseable list. Return nothing but the list. Do so in one line. Start your response with [\""
-                additional_queries = ast.literal_eval(
-                    "[" + await enqueue_generate_text(additional_queries_prompt) + "]"
+                additional_queries = json.loads(
+                    generate_text_with_retry(additional_queries_prompt)
                 )
+
             initial_queries = additional_queries
             all_queries.extend(additional_queries)
 
@@ -203,7 +166,7 @@ async def __(
             title=f"Generating initial report for subtopic: {subtopic}..."
         ):
             report_prompt = f"When writing your report, make it incredibly detailed, thorough, specific, and well-structured. Use Markdown for formatting. Analyze the following search data and generate a comprehensive report on the subtopic '{subtopic}':\n\n{str(search_data)}"
-            report = await enqueue_generate_text(report_prompt)
+            report = generate_text_with_retry(report_prompt)
 
         for i in range(3):
             print(
@@ -213,9 +176,10 @@ async def __(
                 title=f"Analyzing report and generating additional searches (Round {i+1}) for subtopic: {subtopic}..."
             ):
                 analysis_prompt = f"Analyze the following report on the subtopic '{subtopic}' and identify areas that need more detail or further information:\n\n{report}\n\n---\n\nHere are all the search queries you have used so far for this subtopic:\n\n{str(all_queries)}\n\n---\n\nGenerate 3 new and unique search queries to fill in the gaps and provide more detail on the identified areas. Return your queries in a Python-parseable list. Return nothing but the list. Do so in one line. Start your response with [\""
-                additional_queries = ast.literal_eval(
-                    "[" + await enqueue_generate_text(analysis_prompt) + "]"
+                additional_queries = json.loads(
+                    generate_text_with_retry(analysis_prompt)
                 )
+
             all_queries.extend(additional_queries)
 
             round_search_data = []
@@ -230,14 +194,14 @@ async def __(
                 title=f"Updating report with additional information (Round {i+1}) for subtopic: {subtopic}..."
             ):
                 update_prompt = f"Update the following report on the subtopic '{subtopic}' by incorporating the new information from the additional searches. Keep all existing information... only add new information:\n\n{report}\n\n---\n\nAdditional search data for this round:\n\n{str(round_search_data)}\n\n---\n\nGenerate an updated report that includes the new information and provides more detail in the identified areas. Use Markdown for formatting."
-                report = await enqueue_generate_text(update_prompt)
+                report = generate_text_with_retry(update_prompt)
 
         print(f"Generating boss feedback for subtopic: {subtopic}...")
         with mo.status.spinner(
             title=f"Generating boss feedback for subtopic: {subtopic}..."
         ):
             feedback_prompt = f"Imagine you are the boss reviewing the following report on the subtopic '{subtopic}':\n\n{report}\n\n---\n\nProvide constructive feedback on what information is missing or needs further elaboration in the report. Be specific and detailed in your feedback."
-            feedback = await enqueue_generate_text(feedback_prompt, max_tokens=1000)
+            feedback = generate_text_with_retry(feedback_prompt, max_tokens=1000)
 
         print(
             f"Generating final round of searches based on feedback for subtopic: {subtopic}..."
@@ -246,9 +210,8 @@ async def __(
             title=f"Generating final round of searches based on feedback for subtopic: {subtopic}..."
         ):
             final_queries_prompt = f"Based on the following feedback from the boss regarding the subtopic '{subtopic}':\n\n{feedback}\n\n---\n\nGenerate 3 search queries to find the missing information and address the areas that need further elaboration. Return your queries in a Python-parseable list. Return nothing but the list. Do so in one line. Start your response with [\""
-            final_queries = ast.literal_eval(
-                "[" + await enqueue_generate_text(final_queries_prompt) + "]"
-            )
+            final_queries = json.loads(generate_text_with_retry(final_queries_prompt))
+
         all_queries.extend(final_queries)
 
         final_search_data = []
@@ -261,7 +224,7 @@ async def __(
             title=f"Updating report with final information for subtopic: {subtopic}..."
         ):
             final_update_prompt = f"Update the following report on the subtopic '{subtopic}' by incorporating the new information from the final round of searches based on the boss's feedback:\n\n{report}\n\n---\n\nFinal search data:\n\n{str(final_search_data)}\n\n---\n\nGenerate the final report that addresses the boss's feedback and includes the missing information. Use Markdown for formatting."
-            final_report = await enqueue_generate_text(final_update_prompt)
+            final_report = generate_text_with_retry(final_update_prompt)
 
         print(f"Final report generated for subtopic: {subtopic}!")
         return final_report
@@ -277,52 +240,38 @@ async def __(
         print("Comprehensive report generated!")
         return comprehensive_report
 
-    # Create task and result queues
-    task_queue = queue.Queue()
-    result_queue = queue.Queue()
+    def generate_text_with_retry(prompt, max_tokens=4000, num_retries=3):
+        for attempt in range(num_retries):
+            try:
+                return generate_text(prompt, max_tokens)
+            except Exception as e:
+                print(
+                    f"Error generating text (attempt {attempt+1}/{num_retries}): {str(e)}"
+                )
+                if attempt < num_retries - 1:
+                    print("Retrying...")
+                else:
+                    raise e
 
-    def worker():
-        while True:
-            task = task_queue.get()
-            if task is None:
-                break
-            prompt, max_tokens = task
-            response = generate_text(prompt, max_tokens)
-            result_queue.put(response)
-            task_queue.task_done()
-
-    async def enqueue_generate_text(prompt, max_tokens=4000):
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, task_queue.put, (prompt, max_tokens))
-        response = await loop.run_in_executor(None, result_queue.get)
-        await loop.run_in_executor(None, result_queue.task_done)
-        return response
-
-    # Start worker thread
-    threading.Thread(target=worker, daemon=True).start()
-
-    # Generate subtopic checklist
     # Generate subtopic checklist
     with mo.status.spinner(title="Generating subtopic checklist..."):
         subtopic_checklist_prompt = f"Generate a detailed checklist of subtopics to research for the topic '{research_topic.value}'. Return your checklist in a Python-parseable list. Return nothing but the list. Do so in one line. Maximum five sub-topics. Start your response with [\""
-        subtopic_checklist = ast.literal_eval(
-            "[" + await enqueue_generate_text(subtopic_checklist_prompt) + "]"
+        subtopic_checklist = json.loads(
+            generate_text_with_retry(subtopic_checklist_prompt)
         )
+
     print(f"Subtopic Checklist: {subtopic_checklist}")
 
-    subtopic_reports = mo.ui.tabs({
-        "Tab 1": mo.md("# Content for Tab 1"),
-        "Tab 2": mo.md("# Content for Tab 2"),
-    })
+    subtopic_reports = mo.ui.tabs(
+        {
+            "Tab 1": mo.md("# Content for Tab 1"),
+            "Tab 2": mo.md("# Content for Tab 2"),
+        }
+    )
 
     for subtopic in subtopic_checklist:
         report = await generate_subtopic_report(subtopic)
         subtopic_reports.append({"title": subtopic, "content": mo.md(report)})
-
-    # Signal the worker to stop
-    await asyncio.get_event_loop().run_in_executor(None, task_queue.put, None)
-    await asyncio.get_event_loop().run_in_executor(None, task_queue.join)
-    await asyncio.get_event_loop().run_in_executor(None, result_queue.join)
 
     # Combine subtopic reports into a comprehensive report
     with mo.status.spinner(title="Generating comprehensive report..."):
@@ -332,7 +281,9 @@ async def __(
                 content=mo.ui.markdown(
                     generate_comprehensive_report(
                         research_topic.value,
-                        "\n\n".join(subtopic_reports.value.values()),
+                        "\n\n".join(
+                            [report for _, report in subtopic_reports.value.items()]
+                        ),
                     )
                 ),
             )
@@ -348,19 +299,16 @@ async def __(
     )
     return (
         comprehensive_report,
-        enqueue_generate_text,
         generate_button,
         generate_comprehensive_report,
         generate_subtopic_report,
+        generate_text_with_retry,
         report,
-        result_queue,
         search_web,
         subtopic,
         subtopic_checklist,
         subtopic_checklist_prompt,
         subtopic_reports,
-        task_queue,
-        worker,
     )
 
 
