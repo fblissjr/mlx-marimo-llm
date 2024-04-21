@@ -47,7 +47,7 @@ def __():
     SERP_API_KEY = ""
 
     # model = mlx-community/Meta-Llama-3-8B-Instruct-4bit # modify to wherever (or whatever) your model may be
-    model = "./Meta-Llama-3-8B-Instruct-8bit-mlx"
+    model = "/models/Meta-Llama-3-8B-Instruct-8bit-mlx"
 
     max_tokens = 4096
     mx.random.seed(0)
