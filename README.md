@@ -1,7 +1,7 @@
 # mlx-marimo-llm
 Apple MLX LLMs - mlx-lm + marimo 
 
-# edit: very broken, work in progress, don't use now :)
+# edit: very broken, work in progress, needs to be simpler, threading not needed, just sequential llm calls to avoid memory blowups
 
 ## quick usage info
 - sunday kid activities starting so here's a quick usage guide:
