@@ -1,6 +1,8 @@
 # mlx-marimo-llm
 Apple MLX LLMs - mlx-lm + marimo 
 
+# edit: very broken, work in progress, don't use now :)
+
 ## quick usage info
 - sunday kid activities starting so here's a quick usage guide:
 - pip install mlx-lm (macos only)
