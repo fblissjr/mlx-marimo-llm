@@ -3,6 +3,9 @@ Apple MLX LLMs - mlx-lm + marimo
 
 # edit: very broken, work in progress, needs to be simpler, threading not needed, just sequential llm calls to avoid memory blowups
 
+## Entire concept and code and functions / SERP functions heavily copied from Matt Shumer @ https://github.com/mshumer/ai-researcher/blob/main/Claude_Researcher.ipynb (love your work, Matt!)
+## My sole contribution on top of Matt's awesome notebook is putting it in Marimo and refactoring it to run on mlx-lm, trying to avoid parallel generations that cause crashes. Modify as you see fit!
+
 ## quick usage info
 - sunday kid activities starting so here's a quick usage guide:
 - pip install mlx-lm (macos only)
