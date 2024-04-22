@@ -15,4 +15,3 @@ Apple MLX LLMs - mlx-lm + marimo
 - marimo edit marimo-serplexity.py (opens a browser to edit)
 - may overwhelm and crash your system given the text gen volume. to be worked on, unless someone else gets to it before me
 - UI is very very raw and not even close to what a good marimo app should look like
-- marimo is fantastic. please give it a try - marimo.io
